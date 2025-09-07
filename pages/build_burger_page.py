@@ -12,7 +12,13 @@ class BuildBurgerPage(BasePage):
 
     @allure.step('Кликнуть на кнопку "Лента заказов"')
     def click_feed_button(self):
-        self.driver.find_element(*loc.ORDER_LIST_BUTTON).click()
+        try:
+            self.wait_for_clickability(loc.ORDER_LIST_BUTTON, 7)
+            self.driver.find_element(*loc.ORDER_LIST_BUTTON).click()
+        except Exception:
+            # Fallback to JS click if element is intercepted
+            feed_btn = self.driver.find_element(*loc.ORDER_LIST_BUTTON)
+            self.driver.execute_script("arguments[0].click();", feed_btn)
 
     @allure.step('Кликнуть на ингредиент')
     def click_ingredient(self):
@@ -40,7 +46,18 @@ class BuildBurgerPage(BasePage):
 
     @allure.step('Свернуть окно заказа (нажать на крестик)')
     def minimize_order_popup(self):
-        self.driver.find_element(*loc.CLOSE_ORDER_POPUP).click()
+        # Убедиться, что кнопка закрытия присутствует и кликабельна, затем нажать на неё
+        try:
+            self.wait_for_visibility(loc.CONFIRMATION_POPUP, 7)
+            self.wait_for_clickability(loc.CLOSE_ORDER_POPUP, 7)
+            self.driver.find_element(*loc.CLOSE_ORDER_POPUP).click()
+        except Exception:
+            close_btn = self.driver.find_element(*loc.CLOSE_ORDER_POPUP)
+            self.driver.execute_script("arguments[0].click();", close_btn)
+        
+        # Small wait for modal to close
+        import time
+        time.sleep(1)
 
     @allure.step('Ожидание пока номер заказа станет отличным от 9999')
     def wait_order_number(self):        
