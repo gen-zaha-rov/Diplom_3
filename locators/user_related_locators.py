@@ -13,6 +13,7 @@ EMAIL_FIELD = (By.XPATH, './/*[@class="text input__textfield text_type_main-defa
 RESTORE_PASSWORD_BUTTON = (By.XPATH, '//*[@id="root"]/div/main/div/form/button')
 PASSWORD_FIELD = (By.XPATH,'//div[@class="input pr-6 pl-6 input_type_password input_size_default"]')
 PASSWORD_EYE_BUTTON = (By.XPATH,'.//*[@class="input__icon input__icon-action"]')
+PASSWORD_FIELD_DISPLAYED_DATA = (By.XPATH, '//input[@type="password" or @type="text"]')
 
 # Личный кабинет
 USER_ACCOUNT_BUTTON = (By.XPATH, './/*[@href="/account"]')

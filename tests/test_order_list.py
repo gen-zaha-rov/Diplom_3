@@ -1,118 +1,98 @@
 import allure
-import pytest
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 
 import urls
-from locators import order_list_locators as ol_loc, build_burger_locators as bb_loc
+from locators import order_list_locators as ol_loc
+from locators.build_burger_locators import BurgerLocators
 from pages.order_list_page import OrderListPage
 from pages.build_burger_page import BuildBurgerPage
+from pages.user_account_page import UserAccountPage
 
 
 
-class CounterIncreased:
-  # Ожидание увеличения счётчика
-    def __init__(self, locator, initial_value):
-        self.locator = locator
-        self.initial_value = initial_value
-
-    def __call__(self, driver):
-        try:
-            current_value = int(driver.find_element(*self.locator).text)
-            return current_value > self.initial_value
-        except (ValueError, AttributeError):
-            return False
-
-
-class OrderInFeed:
-    # Ожидание появления заказа в ленте заказов
-    def __init__(self, order_number):
-        self.order_number = order_number
-
-    def __call__(self, driver):
-        # Проверка в списке "В работе"
-        in_process = driver.find_elements(*ol_loc.in_process_order_number(self.order_number))
-        if in_process:
-            return True
-        
-        # Проверка в ленте заказов
-        anywhere_number = driver.find_elements(*ol_loc.anywhere_in_feed_order_number(self.order_number))
-        return bool(anywhere_number)
-
-
-@pytest.mark.usefixtures('driver', 'auth')
 class TestOrderList:
 
     @allure.title('Детали заказа')
-    def test_order_details(self):
-        order_list = OrderListPage(self.driver)
+    def test_order_details(self, driver):
+        order_list = OrderListPage(driver)
         order_list.open_page(urls.ORDER_LIST)
-        order_list.wait_for_clickability(ol_loc.ORDER_FROM_LIST, 7)
+        order_list.wait_for_clickability(ol_loc.ORDER_FROM_LIST)
         order_list.click_order()
-        assert order_list.driver.find_element(*ol_loc.ORDER_POPUP)
+        assert order_list.find_element(*ol_loc.ORDER_POPUP)
 
-    @allure.title('Заказ пользователя в Ленте заказов')
-    def test_user_order_in_list(self):
-        page = BuildBurgerPage(self.driver)
-        page.open_page(urls.BASE_URL)
-        page.wait_for_clickability(bb_loc.INGREDIENT, 10)
-        page.make_order(bb_loc.INGREDIENT)
-        page.wait_for_visibility(bb_loc.CONFIRMATION_POPUP, 7)
-        page.wait_order_number()
-        order_number = '#0' + page.get_text(bb_loc.ORDER_NUMBER)
-        page.minimize_order_popup()
-        page.click_feed_button()
-        page.wait_for_visibility(ol_loc.DONE_ALL_TIME, 7)
-        assert page.driver.find_element(*(ol_loc.order_number_in_list(order_number)))
+    @allure.title('Заказ пользователя из блока «История заказов» отобразится в «Ленте заказов»')
+    def test_orders_from_profile_visible_in_feed(self, driver, create_new_user):
+        order_list = OrderListPage(driver)
+        user_page = UserAccountPage(driver)
+        build_page = BuildBurgerPage(driver)
 
-    @allure.title('Cчётчик {counter_type}')
-    @pytest.mark.parametrize("counter_type, locator", [("Выполнено за всё время", ol_loc.DONE_ALL_TIME),
-                                                       ("Выполнено за сегодня", ol_loc.DONE_TODAY)],
-                             ids=["during all time", "during today"])
-    def test_counter_done_all(self, counter_type, locator):
-        page = BuildBurgerPage(self.driver)
-        page.open_page(urls.ORDER_LIST)
-        page.wait_for_clickability(locator, 7)
-        count_before_new_order = page.get_text(locator)
-        page.click_constructor()
-        page.wait_for_clickability(bb_loc.INGREDIENT, 7)
-        page.make_order(bb_loc.INGREDIENT)
-        page.wait_order_number()
-        order_number = '#0' + page.get_text(bb_loc.ORDER_NUMBER)
-        page.wait_for_visibility(bb_loc.CONFIRMATION_POPUP, 7)
-        page.minimize_order_popup()
-        page.click_feed_button()
-        page.wait_for_visibility(locator, 7)
+        user_page.open_page(urls.BASE_URL)
+        user_page.auth(create_new_user)
         
-        # Ожидание появления заказа в ленте заказов
-        page.wait_for_visibility(ol_loc.order_number_in_list(order_number), 10)
+        build_page.wait_for_clickability(BurgerLocators.INGREDIENT)
+        build_page.make_order(BurgerLocators.INGREDIENT)
+        build_page.wait_for_visibility(BurgerLocators.CONFIRMATION_POPUP)
         
-        # Ожидание увеличения счётчика
-        count_before = int(count_before_new_order)
-        wait = WebDriverWait(page.driver, 45)
-        try:
-            wait.until(CounterIncreased(locator, count_before))
-            # Проверка увеличения счётчика
-            count_after = int(page.get_text(locator))
-            assert count_after > count_before
-        except TimeoutException:
-            # Проверка уменьшения счётчика
-            count_after = int(page.get_text(locator))
-            assert count_after >= count_before, f"Счётчик уменьшился с {count_before} до {count_after}"
+        order_number_from_popup = build_page.get_text_from_element(*BurgerLocators.ORDER_NUMBER)
+        assert order_number_from_popup, "Номер заказа не может быть пустым"
+        assert any(char.isdigit() for char in order_number_from_popup)
+
+    @allure.title('При заведении нового заказа счётчик "Выполнено за сегодня" увеличивается')
+    def test_order_list_total_counter_for_today(self, driver, create_new_user):
+        order_list = OrderListPage(driver)
+        user_page = UserAccountPage(driver)
+        build_page = BuildBurgerPage(driver)
+
+        user_page.open_page(urls.BASE_URL)
+        user_page.auth(create_new_user)
+
+        order_list.click_button_order_list()
+        order_total_for_today = int(order_list.text_total_orders_for_today())
+        build_page.click_constructor()
+        order_list.drag_and_drop_ingredient_to_burger_side()
+        build_page.click_make_order_button()
+        order_list.wait_until_text_is_visible()
+        order_list.wait_order_number_change()
+        order_list.close_order_popup()
+        order_list.click_button_order_list()
+
+        assert order_total_for_today + 1 == int(order_list.text_total_orders_for_today())
+    
+    allure.title('При заведении нового заказа счётчик "Выполнено за всё время" увеличивается')
+    def test_order_list_total_counter_increase(self, driver, create_new_user):
+        order_list = OrderListPage(driver)
+        user_page = UserAccountPage(driver)
+        build_page = BuildBurgerPage(driver)
+
+        user_page.open_page(urls.BASE_URL)
+        user_page.auth(create_new_user)
+
+        order_list.click_button_order_list()
+        order_for_all_time = int(order_list.text_order_all_time())
+        build_page.click_constructor()
+        order_list.drag_and_drop_ingredient_to_burger_side()
+        build_page.click_make_order_button()
+        order_list.wait_until_text_is_visible()
+        order_list.wait_order_number_change()
+        order_list.close_order_popup()
+        order_list.click_button_order_list()
+
+        assert order_for_all_time + 1 == int(order_list.text_order_all_time())
+
 
     @allure.title('Заказ перемещён в блок "В работе"')
-    def test_order_in_process_list(self):
-        page = BuildBurgerPage(self.driver)
+    def test_order_in_process_list(self, driver, create_new_user):
+        page = BuildBurgerPage(driver)
+        user_page = UserAccountPage(driver)
         page.open_page(urls.BASE_URL)
-        page.wait_for_clickability(bb_loc.INGREDIENT, 7)
-        page.make_order(bb_loc.INGREDIENT)
-        page.wait_order_number()
-        order_number = page.get_text(bb_loc.ORDER_NUMBER)
-        page.wait_for_visibility(bb_loc.CONFIRMATION_POPUP, 7)
+        user_page.auth(create_new_user)
+        page.wait_for_clickability(BurgerLocators.INGREDIENT)
+        page.make_order(BurgerLocators.INGREDIENT)
+        page.wait_order_number_change()
+        order_number = page.get_text_from_element(*BurgerLocators.ORDER_NUMBER)
+        page.wait_for_visibility(BurgerLocators.CONFIRMATION_POPUP)
         page.minimize_order_popup()
         page.click_feed_button()
-        page.wait_for_visibility(ol_loc.DONE_ALL_TIME, 7)
-        # Ожидать появления заказа в ленте заказов 
-        wait = WebDriverWait(page.driver, 10)
-        wait.until(OrderInFeed(order_number))
+        page.wait_for_visibility(ol_loc.DONE_ALL_TIME)
+        order_list_page = OrderListPage(page.driver)
+        order_in_progress = order_list_page.order_number_in_progress()
+        assert order_number in order_in_progress

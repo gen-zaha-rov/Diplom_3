@@ -7,7 +7,7 @@ class RestorePasswordPage(BasePage):
 
     @allure.step('Нажать на кнопку "Восстановить пароль"')
     def click_restore_password_link(self):
-        self.scroll_to_element(loc.RESTORE_PASSWORD_LINK)
+        self.scroll_to_element(*loc.RESTORE_PASSWORD_LINK)
         self.driver.find_element(*loc.RESTORE_PASSWORD_LINK).click()
 
     @allure.step('Ввести email в поле "Email"')
