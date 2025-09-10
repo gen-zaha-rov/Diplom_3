@@ -1,6 +1,11 @@
 from selenium.webdriver.common.by import By
 
 
+MAKE_ORDER_BUTTON = (By.XPATH, './/*[@class="button_button__33qZ0 button_button_type_primary__1O7Bx button_button_size_large__G21Vg"]')
+ORDER_LIST_BUTTON = (By.XPATH, './/*[@href="/feed"]')
+ORDER_HISTORY_BUTTON = (By.XPATH, '//a[text() = "История заказов"]')  
+ORDER_NUMBER = (By.XPATH, "//h2[contains(@class, 'Modal_modal__title_shadow' )]") 
+ORDER_NUMBER_IN_HISTORY = (By.XPATH, '//p[@class="text text_type_digits-default"]') 
 ORDER_FROM_LIST = (By.XPATH, './/li[@class="OrderHistory_listItem__2x95r mb-6"][1]')
 ORDER_POPUP = (By.XPATH, './/*[@class="Modal_orderBox__1xWdi Modal_modal__contentBox__sCy8X p-10"]')
 MODAL_ORDER_IN_PROCESSING = (By.XPATH, ".//p[text()='Ваш заказ начали готовить']")
@@ -9,5 +14,10 @@ DONE_TODAY = (By.XPATH, './/p[contains(text(), "за сегодня")]/following
 DONE_ALL_TIME = (By.XPATH, './/p[contains(text(), "за все время")]/following-sibling::p')
 LAST_FROM_IN_PROCESS = (By.XPATH, './/ul[@class="OrderFeed_orderList__cBvyi"]/li[1]')
 ORDER_NUMBER_IN_PROGRESS = (By.XPATH, "//li[contains(@class, 'text') and contains(@class, 'text_type_digits-default') and contains(@class, 'mb-2')]") 
-BUN = (By.XPATH, '//p[text() = "Флюоресцентная булка R2-D3"]')
+BUN = (By.XPATH, './/ul[@class="BurgerIngredients_ingredients__list__2A-mT"][1]/a[1]')
 BURGER_SIDE = (By.XPATH, '//section[contains(@class, "BurgerConstructor_basket")]') 
+CONSTRUCTOR_BUTTON = (By.XPATH, './/p[contains(text(),"Конструктор")]')
+USER_ACCOUNT_BUTTON = (By.XPATH, './/*[@href="/account"]')
+EMAIL_FIELD_FOR_AUTH = (By.XPATH, '//input[@name="name" or @type="email"]')
+PASSWORD_AUTH_FIELD = (By.XPATH, '//input[@name="Пароль" or @type="password"]')
+LOGIN_BUTTON = (By.XPATH, './/button[contains(text(), "Войти")]')

@@ -14,8 +14,10 @@ RESTORE_PASSWORD_BUTTON = (By.XPATH, '//*[@id="root"]/div/main/div/form/button')
 PASSWORD_FIELD = (By.XPATH,'//div[@class="input pr-6 pl-6 input_type_password input_size_default"]')
 PASSWORD_EYE_BUTTON = (By.XPATH,'.//*[@class="input__icon input__icon-action"]')
 PASSWORD_FIELD_DISPLAYED_DATA = (By.XPATH, '//input[@type="password" or @type="text"]')
+SAVE_BUTTON = (By.XPATH, '//button[text()="Сохранить"]')
 
 # Личный кабинет
+ENTER_TEXT = (By.XPATH, '//h2[text()="Вход"]')
 USER_ACCOUNT_BUTTON = (By.XPATH, './/*[@href="/account"]')
 ORDER_HISTORY = (By.XPATH, './/*[@href="/account/order-history"]')
 LOGOUT_BUTTON = (By.XPATH, '//button[contains(@class, "Account_button__14Yp3") and contains(text(), "Выход")]')

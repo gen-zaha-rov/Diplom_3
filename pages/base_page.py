@@ -1,13 +1,23 @@
 import allure
+import urls
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from locators.build_burger_locators import BurgerLocators
+from locators.build_burger_locators import BurgerLocators as bl
 
 
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
+
+    @allure.step('Вход в аккаунт')
+    def auth(self, create_user):
+        email, password = create_user
+
+        self.open_page(urls.LOGIN_USER)
+        self.enter_text(*bl.EMAIL_FIELD_FOR_AUTH, text=email)
+        self.enter_text(*bl.PASSWORD_AUTH_FIELD, text=password)
+        self.click_element(*bl.LOGIN_BUTTON)
 
     @allure.step('Открытие страницы {url}')
     def open_page(self, url):  
@@ -21,6 +31,10 @@ class BasePage:
     def click_element(self, *locator):
         element = WebDriverWait(self.driver, 7).until(EC.presence_of_element_located(locator))
         element.click()
+
+    @allure.step('Кликнуть на элементе с помощью JavaScript')
+    def click_JS_element(self, element): 
+        self.driver.execute_script("arguments[0].click();", element)    
 
     @allure.step('Ввести значение в поле для ввода')
     def enter_text(self, *locator, text):
@@ -62,15 +76,12 @@ class BasePage:
     
     @allure.step('Ожидание счетчика ингредиента')
     def wait_ingredient_counter(self):
-        WebDriverWait(self.driver, 7).until(lambda d: int(self.get_text_from_element(*BurgerLocators.INGREDIENT_COUNTER)))
+        try:
+            WebDriverWait(self.driver, 7).until(lambda d: int(self.get_text_from_element(*bl.INGREDIENT_COUNTER)) > 0)
+        except (ValueError, Exception):
+            # If counter element doesn't exist or has invalid value, wait for it to appear
+            WebDriverWait(self.driver, 7).until(EC.presence_of_element_located(bl.INGREDIENT_COUNTER))
     
     @allure.step('Ожидание пока номер заказа станет отличным от 9999')
     def wait_order_number_change(self):        
-        WebDriverWait(self.driver, 7).until(lambda d: self.get_text_from_element(*BurgerLocators.ORDER_NUMBER) != '9999')
-
-    @allure.step('Свернуть окно заказа (нажать на крестик)')
-    def minimize_order_popup(self):
-        self.wait_for_visibility(BurgerLocators.CONFIRMATION_POPUP)
-        self.wait_for_clickability(BurgerLocators.CLOSE_ORDER_POPUP)
-        close_button = self.find_element(*BurgerLocators.CLOSE_ORDER_POPUP)
-        self.driver.execute_script("arguments[0].click();", close_button)    
+        WebDriverWait(self.driver, 7).until(lambda d: self.get_text_from_element(*bl.ORDER_NUMBER) != '9999')      

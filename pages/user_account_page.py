@@ -1,4 +1,6 @@
 import allure
+import urls
+
 from locators import user_related_locators as loc
 from pages.base_page import BasePage
 
@@ -9,10 +11,14 @@ class UserAccountPage(BasePage):
     def auth(self, create_user):
         email, password = create_user
 
-        self.click_element(*loc.USER_ACCOUNT_BUTTON)
+        self.open_page(urls.LOGIN_USER)
         self.enter_text(*loc.EMAIL_FIELD_FOR_AUTH, text=email)
         self.enter_text(*loc.PASSWORD_AUTH_FIELD, text=password)
         self.click_element(*loc.LOGIN_BUTTON)
+
+    @allure.step('Ожидание кнопки «Профиль»')
+    def wait_for_logout_button(self):
+        self.wait_for_clickability(loc.LOGOUT_BUTTON)    
 
     @allure.step('Нажатие на кнопку "Личный кабинет"')
     def click_user_account(self):
@@ -28,3 +34,4 @@ class UserAccountPage(BasePage):
     def click_logout(self):
         self.wait_for_clickability(loc.LOGOUT_BUTTON)
         self.click_element(*loc.LOGOUT_BUTTON)
+        self.wait_for_visibility(loc.ENTER_TEXT)

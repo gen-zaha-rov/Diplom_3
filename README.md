@@ -18,6 +18,9 @@ pip install -r requirements.txt
 3) Запуск тестов:
 ```
 pytest -s -v
+
+для дебага удобнее запускать штучно:
+python -m pytest tests/test_make_order.py::TestBuildBurgerPage::test_open_build_burger -v
 ```
 
 ## Полезные опции
